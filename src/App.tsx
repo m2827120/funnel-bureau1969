@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import styled from 'styled-components';
+import styled, { ThemeProvider } from 'styled-components';
 import WebApp from '@twa-dev/sdk';
 import FunnelVisualization from './FunnelVisualization';
 import Accordion from '@mui/material/Accordion';
@@ -13,6 +13,9 @@ import NumberInput from './NumberInput';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ConversionSelector from './components/ConversionSelector';
 import { ConversionData } from './data/conversionData';
+import { lightTheme, darkTheme } from './theme';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 
 // Initialize Telegram WebApp
 WebApp.ready();
@@ -25,6 +28,32 @@ const Container = styled.div`
   box-sizing: border-box;
   min-height: 100vh;
   padding-bottom: 96px; /* для кнопки */
+  background: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
+  transition: all 0.3s ease;
+`;
+
+const ThemeToggle = styled.button`
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: ${({ theme }) => theme.cardBackground};
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: ${({ theme }) => theme.text};
+  box-shadow: 0 2px 8px ${({ theme }) => theme.shadowColor};
+  z-index: 1000;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
 `;
 
 const InputGroup = styled.div`
@@ -34,7 +63,7 @@ const InputGroup = styled.div`
 const Label = styled.label`
   display: block;
   margin-bottom: 8px;
-  color: #666;
+  color: ${({ theme }) => theme.labelColor};
   font-size: 14px;
 `;
 
@@ -42,7 +71,7 @@ const Button = styled.button`
   flex: 1 1 auto;
   min-width: 0;
   padding: 10px 0;
-  background: #2481cc;
+  background: ${({ theme }) => theme.primary};
   color: white;
   border: none;
   border-radius: 12px;
@@ -52,11 +81,11 @@ const Button = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.18s;
+  transition: all 0.18s;
   margin: 0;
   box-sizing: border-box;
   &:hover {
-    background: #1c6aa3;
+    opacity: 0.9;
   }
 `;
 
@@ -65,8 +94,8 @@ const ResetButton = styled.button`
   height: 44px;
   min-width: 44px;
   min-height: 44px;
-  background: #f5f6fa;
-  color: #2481cc;
+  background: ${({ theme }) => theme.resetButtonBackground};
+  color: ${({ theme }) => theme.resetButtonColor};
   border: none;
   border-radius: 12px;
   font-size: 22px;
@@ -74,33 +103,35 @@ const ResetButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.18s;
+  transition: all 0.18s;
   &:hover {
-    background: #e3e8f0;
+    opacity: 0.9;
   }
 `;
 
 const MainCard = styled.div`
-  background: #f4f8fd;
+  background: ${({ theme }) => theme.cardBackground};
   border-radius: 18px;
-  box-shadow: 0 2px 12px #0001;
+  box-shadow: 0 2px 12px ${({ theme }) => theme.shadowColor};
   padding: 24px 16px 16px 16px;
   margin-bottom: 24px;
+  transition: all 0.3s ease;
 `;
 
 const ResultsCard = styled.div`
-  background: #eaf7f0;
+  background: ${({ theme }) => theme.resultsCardBackground};
   border-radius: 18px;
-  box-shadow: 0 2px 12px #0001;
+  box-shadow: 0 2px 12px ${({ theme }) => theme.shadowColor};
   padding: 24px 16px 16px 16px;
   margin-bottom: 24px;
-  border-top: 4px solid #1bb36a;
+  border-top: 4px solid ${({ theme }) => theme.secondary};
+  transition: all 0.3s ease;
 `;
 
 const SectionTitle = styled.h2`
   font-size: 20px;
   margin-bottom: 18px;
-  color: #2481cc;
+  color: ${({ theme }) => theme.primary};
 `;
 
 const SliderLabel = styled.div`
@@ -108,17 +139,18 @@ const SliderLabel = styled.div`
   align-items: center;
   font-size: 15px;
   margin-bottom: 4px;
+  color: ${({ theme }) => theme.text};
 `;
 
 const SliderValue = styled.span`
   margin-left: 12px;
   font-weight: bold;
-  color: #2481cc;
+  color: ${({ theme }) => theme.primary};
 `;
 
 const SliderExplain = styled.div`
   font-size: 13px;
-  color: #888;
+  color: ${({ theme }) => theme.sliderExplainColor};
   margin-bottom: 8px;
 `;
 
@@ -129,14 +161,14 @@ const MetricIcon = styled.div`
 
 const MetricLabel = styled.div`
   font-size: 11px;
-  color: #888;
+  color: ${({ theme }) => theme.metricLabelColor};
   margin-bottom: 2px;
 `;
 
 const MetricValue = styled.div`
   font-size: 15px;
   font-weight: 600;
-  color: #2481cc;
+  color: ${({ theme }) => theme.metricValueColor};
 `;
 
 const STAGE_ICONS = ['👥', '📝', '⭐', '💰'];
@@ -173,7 +205,7 @@ const CardGrid = styled.div`
 
 const CardBox = styled.div<{ color?: string }>`
   border-radius: 18px;
-  box-shadow: 0 1px 8px #0001;
+  box-shadow: 0 1px 8px ${({ theme }) => theme.shadowColor};
   min-width: 0;
   width: 100%;
   padding: 12px 10px;
@@ -181,23 +213,69 @@ const CardBox = styled.div<{ color?: string }>`
   flex-direction: column;
   align-items: center;
   text-align: center;
-  color: ${({ color }) => color || '#222'};
-  background: #fff;
+  color: ${({ color, theme }) => color || theme.text};
+  background: ${({ theme }) => theme.cardBackground};
+  transition: all 0.3s ease;
 `;
 
 const FooterCreds = styled.div`
-  color: #888;
+  color: ${({ theme }) => theme.footerColor};
   font-size: 13px;
   text-align: center;
   margin: 36px 0 12px 0;
   a {
-    color: #888;
+    color: ${({ theme }) => theme.footerColor};
     text-decoration: underline;
     transition: color 0.18s;
     &:hover {
-      color: #2481cc;
+      color: ${({ theme }) => theme.primary};
     }
   }
+`;
+
+const TooltipContent = styled.div`
+  position: absolute;
+  left: 50%;
+  top: 120%;
+  transform: translateX(-50%);
+  background: ${({ theme }) => theme.cardBackground};
+  color: ${({ theme }) => theme.text};
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  box-shadow: 0 2px 12px ${({ theme }) => theme.shadowColor};
+  z-index: 10;
+  white-space: pre-line;
+  min-width: 180px;
+  max-width: 260px;
+`;
+
+const InfoIcon = styled(InfoOutlinedIcon)`
+  margin-left: 4px;
+  vertical-align: middle;
+  color: ${({ theme }) => theme.primary};
+`;
+
+const ErrorMessage = styled.div`
+  color: #e74c3c;
+  font-size: 13px;
+  margin-top: 2px;
+`;
+
+const NegativeResultsCard = styled(ResultsCard)<{ isNegative: boolean }>`
+  background: ${({ isNegative, theme }) => isNegative ? '#fff4f4' : theme.resultsCardBackground};
+  border-top: 4px solid ${({ isNegative, theme }) => isNegative ? '#e74c3c' : theme.secondary};
+`;
+
+const AccordionTitle = styled.span`
+  font-weight: 500;
+  color: ${({ theme }) => theme.text};
+`;
+
+const BigValue = styled.div`
+  font-size: 22px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.text};
 `;
 
 function formatShortNumber(num: number): string {
@@ -225,6 +303,10 @@ interface FunnelResults {
 }
 
 function App() {
+  const [isDarkTheme, setIsDarkTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme === 'dark';
+  });
   const [funnelData, setFunnelData] = useState<FunnelData>({
     budget: 1000000,
     cpc: 520,
@@ -431,413 +513,364 @@ function App() {
     }));
   };
 
+  const toggleTheme = () => {
+    const newTheme = !isDarkTheme;
+    setIsDarkTheme(newTheme);
+    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+  };
+
   return (
-    <Container>
-      <MainCard>
-        <SectionTitle>Ваши данные</SectionTitle>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <InputGroup style={{ flex: 1, minWidth: 180 }}>
-            <Label>
-              Рекламный бюджет
-              <span
-                style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}
-                onClick={() => handleTooltipClick('budget')}
-                onMouseEnter={() => handleTooltipHover('budget')}
-                onMouseLeave={handleTooltipLeave}
-              >
-                <InfoOutlinedIcon fontSize="small" style={{ marginLeft: 4, verticalAlign: 'middle', color: '#2481cc' }} />
-                {tooltipOpen === 'budget' && (
-                  <div style={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: '120%',
-                    transform: 'translateX(-50%)',
-                    background: '#f3f3f3',
-                    color: '#222',
-                    borderRadius: 10,
-                    padding: '10px 16px',
-                    fontSize: 14,
-                    boxShadow: '0 2px 12px #0001',
-                    zIndex: 10,
-                    whiteSpace: 'pre-line',
-                    minWidth: 180,
-                    maxWidth: 260,
-                  }}>
-                    Сколько вы готовы потратить на рекламу?
-                  </div>
-                )}
-              </span>
-            </Label>
-            <NumberInput
-              value={funnelData.budget === 0 ? '' : funnelData.budget}
-              onChange={v => handleInputChange('budget', v === '' ? '0' : v)}
-              placeholder="Введите сумму"
-              min={0}
-              style={errors.budget ? { borderColor: '#e74c3c', background: '#fff6f6' } : {}}
-            />
-            {errors.budget && <div style={{ color: '#e74c3c', fontSize: 13, marginTop: 2 }}>{errors.budget}</div>}
-          </InputGroup>
-          <InputGroup style={{ flex: 1, minWidth: 180 }}>
-            <Label>
-              Средний чек
-              <span
-                style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}
-                onClick={() => handleTooltipClick('avg-check')}
-                onMouseEnter={() => handleTooltipHover('avg-check')}
-                onMouseLeave={handleTooltipLeave}
-              >
-                <InfoOutlinedIcon fontSize="small" style={{ marginLeft: 4, verticalAlign: 'middle', color: '#2481cc' }} />
-                {tooltipOpen === 'avg-check' && (
-                  <div style={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: '120%',
-                    transform: 'translateX(-50%)',
-                    background: '#f3f3f3',
-                    color: '#222',
-                    borderRadius: 10,
-                    padding: '10px 16px',
-                    fontSize: 14,
-                    boxShadow: '0 2px 12px #0001',
-                    zIndex: 10,
-                    whiteSpace: 'pre-line',
-                    minWidth: 180,
-                    maxWidth: 260,
-                  }}>
-                    Сколько стоит ваш продукт или услуга?
-                  </div>
-                )}
-              </span>
-            </Label>
-            <NumberInput
-              value={funnelData.averageCheck === 0 ? '' : funnelData.averageCheck}
-              onChange={v => handleInputChange('averageCheck', v === '' ? '0' : v)}
-              placeholder="Введите сумму"
-              min={0}
-              style={errors.averageCheck ? { borderColor: '#e74c3c', background: '#fff6f6' } : {}}
-            />
-            {errors.averageCheck && <div style={{ color: '#e74c3c', fontSize: 13, marginTop: 2 }}>{errors.averageCheck}</div>}
-          </InputGroup>
-        </div>
-        <Accordion sx={{ background: 'transparent', boxShadow: 'none' }}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <span style={{ fontWeight: 500 }}>Дополнительно</span>
-          </AccordionSummary>
-          <AccordionDetails>
-            <InputGroup>
+    <ThemeProvider theme={isDarkTheme ? darkTheme : lightTheme}>
+      <Container>
+        <ThemeToggle onClick={toggleTheme}>
+          {isDarkTheme ? <Brightness7Icon /> : <Brightness4Icon />}
+        </ThemeToggle>
+        <MainCard>
+          <SectionTitle>Ваши данные</SectionTitle>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <InputGroup style={{ flex: 1, minWidth: 180 }}>
               <Label>
-                Стоимость клика / трафика
+                Рекламный бюджет
                 <span
                   style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}
-                  onClick={() => handleTooltipClick('cpc')}
-                  onMouseEnter={() => handleTooltipHover('cpc')}
+                  onClick={() => handleTooltipClick('budget')}
+                  onMouseEnter={() => handleTooltipHover('budget')}
                   onMouseLeave={handleTooltipLeave}
                 >
-                  <InfoOutlinedIcon fontSize="small" style={{ marginLeft: 4, verticalAlign: 'middle', color: '#2481cc' }} />
-                  {tooltipOpen === 'cpc' && (
-                    <div style={{
-                      position: 'absolute',
-                      left: '50%',
-                      top: '120%',
-                      transform: 'translateX(-50%)',
-                      background: '#f3f3f3',
-                      color: '#222',
-                      borderRadius: 10,
-                      padding: '10px 16px',
-                      fontSize: 14,
-                      boxShadow: '0 2px 12px #0001',
-                      zIndex: 10,
-                      whiteSpace: 'pre-line',
-                      minWidth: 180,
-                      maxWidth: 260,
-                    }}>
-                      Средняя цена за 1 клик по вашей рекламе.
-                    </div>
+                  <InfoIcon fontSize="small" />
+                  {tooltipOpen === 'budget' && (
+                    <TooltipContent>
+                      Сколько вы готовы потратить на рекламу?
+                    </TooltipContent>
                   )}
                 </span>
               </Label>
               <NumberInput
-                value={funnelData.cpc === 0 ? '' : funnelData.cpc}
-                onChange={v => handleInputChange('cpc', v === '' ? '0' : v)}
+                value={funnelData.budget === 0 ? '' : funnelData.budget}
+                onChange={v => handleInputChange('budget', v === '' ? '0' : v)}
+                placeholder="Введите сумму"
                 min={0}
-                style={errors.cpc ? { borderColor: '#e74c3c', background: '#fff6f6' } : {}}
+                style={errors.budget ? { borderColor: '#e74c3c', background: '#fff6f6' } : {}}
               />
-              {errors.cpc && <div style={{ color: '#e74c3c', fontSize: 13, marginTop: 2 }}>{errors.cpc}</div>}
+              {errors.budget && <ErrorMessage>{errors.budget}</ErrorMessage>}
             </InputGroup>
-            <div style={{ margin: '24px 0 0 0' }}>
-              <SliderLabel>
-                Конверсия трафик → лиды
-                <SliderValue>{Math.round(funnelData.trafficToLeads)}%</SliderValue>
-              </SliderLabel>
-              <SliderExplain>Сколько из 100 человек оставят заявку?</SliderExplain>
-              <Slider
-                value={funnelData.trafficToLeads}
+            <InputGroup style={{ flex: 1, minWidth: 180 }}>
+              <Label>
+                Средний чек
+                <span
+                  style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}
+                  onClick={() => handleTooltipClick('avg-check')}
+                  onMouseEnter={() => handleTooltipHover('avg-check')}
+                  onMouseLeave={handleTooltipLeave}
+                >
+                  <InfoIcon fontSize="small" />
+                  {tooltipOpen === 'avg-check' && (
+                    <TooltipContent>
+                      Сколько стоит ваш продукт или услуга?
+                    </TooltipContent>
+                  )}
+                </span>
+              </Label>
+              <NumberInput
+                value={funnelData.averageCheck === 0 ? '' : funnelData.averageCheck}
+                onChange={v => handleInputChange('averageCheck', v === '' ? '0' : v)}
+                placeholder="Введите сумму"
                 min={0}
-                max={100}
-                step={1}
-                onChange={(_, v) => handleInputChange('trafficToLeads', String(v))}
-                color="primary"
+                style={errors.averageCheck ? { borderColor: '#e74c3c', background: '#fff6f6' } : {}}
               />
-            </div>
-            <div style={{ margin: '18px 0 0 0' }}>
-              <SliderLabel>
-                Конверсия лиды → качественные лиды
-                <SliderValue>{Math.round(funnelData.leadsToQualified)}%</SliderValue>
-              </SliderLabel>
-              <SliderExplain>Сколько из 100 лидов действительно заинтересованы?</SliderExplain>
-              <Slider
-                value={funnelData.leadsToQualified}
-                min={0}
-                max={100}
-                step={1}
-                onChange={(_, v) => handleInputChange('leadsToQualified', String(v))}
-                color="warning"
-              />
-            </div>
-            <div style={{ margin: '18px 0 0 0' }}>
-              <SliderLabel>
-                Конверсия качественные лиды → продажи
-                <SliderValue>{Math.round(funnelData.qualifiedToSales)}%</SliderValue>
-              </SliderLabel>
-              <SliderExplain>Сколько из 100 качественных лидов купят?</SliderExplain>
-              <Slider
-                value={funnelData.qualifiedToSales}
-                min={0}
-                max={100}
-                step={1}
-                onChange={(_, v) => handleInputChange('qualifiedToSales', String(v))}
-                color="success"
-              />
-            </div>
-          </AccordionDetails>
-        </Accordion>
-      </MainCard>
-      <ResultsCard style={isNegative ? { background: '#fff4f4', borderTop: '4px solid #e74c3c' } : {}}>
-        <SectionTitle style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          Воронка продаж
-          <span
-            style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}
-            onClick={() => handleTooltipClick('funnel-anno')}
-            onMouseEnter={() => handleTooltipHover('funnel-anno')}
-            onMouseLeave={handleTooltipLeave}
-          >
-            <InfoOutlinedIcon fontSize="small" style={{ color: '#2481cc', verticalAlign: 'middle' }} />
-            {tooltipOpen === 'funnel-anno' && (
-              <div style={{
-                position: 'absolute',
-                left: '50%',
-                top: '120%',
-                transform: 'translateX(-50%)',
-                background: '#f3f3f3',
-                color: '#222',
-                borderRadius: 10,
-                padding: '10px 16px',
-                fontSize: 14,
-                boxShadow: '0 2px 12px #0001',
-                zIndex: 10,
-                whiteSpace: 'pre-line',
-                minWidth: 180,
-                maxWidth: 260,
-              }}>
-                Потяните за ползунки,
-                чтобы изменить
-                процент конверсии из
-                этапа в этап
+              {errors.averageCheck && <ErrorMessage>{errors.averageCheck}</ErrorMessage>}
+            </InputGroup>
+          </div>
+          <Accordion sx={{ background: 'transparent', boxShadow: 'none' }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <AccordionTitle>Дополнительно</AccordionTitle>
+            </AccordionSummary>
+            <AccordionDetails>
+              <InputGroup>
+                <Label>
+                  Стоимость клика / трафика
+                  <span
+                    style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}
+                    onClick={() => handleTooltipClick('cpc')}
+                    onMouseEnter={() => handleTooltipHover('cpc')}
+                    onMouseLeave={handleTooltipLeave}
+                  >
+                    <InfoIcon fontSize="small" />
+                    {tooltipOpen === 'cpc' && (
+                      <TooltipContent>
+                        Средняя цена за 1 клик по вашей рекламе.
+                      </TooltipContent>
+                    )}
+                  </span>
+                </Label>
+                <NumberInput
+                  value={funnelData.cpc === 0 ? '' : funnelData.cpc}
+                  onChange={v => handleInputChange('cpc', v === '' ? '0' : v)}
+                  min={0}
+                  style={errors.cpc ? { borderColor: '#e74c3c', background: '#fff6f6' } : {}}
+                />
+                {errors.cpc && <ErrorMessage>{errors.cpc}</ErrorMessage>}
+              </InputGroup>
+              <div style={{ margin: '24px 0 0 0' }}>
+                <SliderLabel>
+                  Конверсия трафик → лиды
+                  <SliderValue>{Math.round(funnelData.trafficToLeads)}%</SliderValue>
+                </SliderLabel>
+                <SliderExplain>Сколько из 100 человек оставят заявку?</SliderExplain>
+                <Slider
+                  value={funnelData.trafficToLeads}
+                  min={0}
+                  max={100}
+                  step={1}
+                  onChange={(_, v) => handleInputChange('trafficToLeads', String(v))}
+                  color="primary"
+                />
               </div>
-            )}
-          </span>
-        </SectionTitle>
-        <FunnelVisualization stages={funnelStages} isNegative={isNegative} formatShortNumber={formatShortNumber} onStageSwipe={handleStageSwipe} />
-        <CardGrid style={{ margin: 0 }}>
-          <CardBox color={isNegative ? '#e74c3c' : '#222'} style={{ gridColumn: 'span 2' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <div style={{ fontSize: 22, fontWeight: 700 }}>
-                {results.revenue !== 0
-                  ? (results.revenue < 0
-                      ? '-' + Math.abs(results.revenue).toLocaleString('ru-RU') + ' ₸'
-                      : results.revenue.toLocaleString('ru-RU') + ' ₸')
-                  : '—'}
+              <div style={{ margin: '18px 0 0 0' }}>
+                <SliderLabel>
+                  Конверсия лиды → качественные лиды
+                  <SliderValue>{Math.round(funnelData.leadsToQualified)}%</SliderValue>
+                </SliderLabel>
+                <SliderExplain>Сколько из 100 лидов действительно заинтересованы?</SliderExplain>
+                <Slider
+                  value={funnelData.leadsToQualified}
+                  min={0}
+                  max={100}
+                  step={1}
+                  onChange={(_, v) => handleInputChange('leadsToQualified', String(v))}
+                  color="warning"
+                />
               </div>
-              <div style={{ fontSize: 20, marginLeft: 6 }}>💸</div>
-              <div style={{ fontSize: 13, color: '#888', marginLeft: 4, fontWeight: 500 }}>
-                {results.revenue < 0 ? 'Убыток' : 'Выручка'}
+              <div style={{ margin: '18px 0 0 0' }}>
+                <SliderLabel>
+                  Конверсия качественные лиды → продажи
+                  <SliderValue>{Math.round(funnelData.qualifiedToSales)}%</SliderValue>
+                </SliderLabel>
+                <SliderExplain>Сколько из 100 качественных лидов купят?</SliderExplain>
+                <Slider
+                  value={funnelData.qualifiedToSales}
+                  min={0}
+                  max={100}
+                  step={1}
+                  onChange={(_, v) => handleInputChange('qualifiedToSales', String(v))}
+                  color="success"
+                />
               </div>
-            </div>
-            <div style={{ fontSize: 12, color: isNegative ? '#e74c3c' : '#1bb36a', marginTop: 2, fontWeight: 500 }}>
-              ROI: {results.revenue !== 0 ? results.roi + '%' : '—'}
-            </div>
-          </CardBox>
-          <CardBox color={isNegative ? '#e74c3c' : '#222'} style={{ gridColumn: 'span 2' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <div style={{ fontSize: 22, fontWeight: 700 }}>
-                {results.revenue !== 0
-                  ? ((results.revenue - funnelData.budget) < 0
-                      ? '-' + Math.abs(results.revenue - funnelData.budget).toLocaleString('ru-RU') + ' ₸'
-                      : (results.revenue - funnelData.budget).toLocaleString('ru-RU') + ' ₸')
-                  : '—'}
+            </AccordionDetails>
+          </Accordion>
+        </MainCard>
+        <NegativeResultsCard isNegative={isNegative}>
+          <SectionTitle style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            Воронка продаж
+            <span
+              style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}
+              onClick={() => handleTooltipClick('funnel-anno')}
+              onMouseEnter={() => handleTooltipHover('funnel-anno')}
+              onMouseLeave={handleTooltipLeave}
+            >
+              <InfoIcon fontSize="small" />
+              {tooltipOpen === 'funnel-anno' && (
+                <TooltipContent>
+                  Потяните за ползунки,
+                  чтобы изменить
+                  процент конверсии из
+                  этапа в этап
+                </TooltipContent>
+              )}
+            </span>
+          </SectionTitle>
+          <FunnelVisualization stages={funnelStages} isNegative={isNegative} formatShortNumber={formatShortNumber} onStageSwipe={handleStageSwipe} />
+          <CardGrid style={{ margin: 0 }}>
+            <CardBox color={isNegative ? '#e74c3c' : undefined} style={{ gridColumn: 'span 2' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <BigValue>
+                  {results.revenue !== 0
+                    ? (results.revenue < 0
+                        ? '-' + Math.abs(results.revenue).toLocaleString('ru-RU') + ' ₸'
+                        : results.revenue.toLocaleString('ru-RU') + ' ₸')
+                    : '—'}
+                </BigValue>
+                <div style={{ fontSize: 20, marginLeft: 6 }}>💸</div>
+                <div style={{ fontSize: 13, color: '#888', marginLeft: 4, fontWeight: 500 }}>
+                  {results.revenue < 0 ? 'Убыток' : 'Выручка'}
+                </div>
               </div>
-              <div style={{ fontSize: 20, marginLeft: 6 }}>
-                {(results.revenue - funnelData.budget) < 0 ? '🤯' : '💰'}
+              <div style={{ fontSize: 12, color: isNegative ? '#e74c3c' : '#1bb36a', marginTop: 2, fontWeight: 500 }}>
+                ROI: {results.revenue !== 0 ? results.roi + '%' : '—'}
               </div>
-              <div style={{ fontSize: 13, color: '#888', marginLeft: 4, fontWeight: 500 }}>
-                {(results.revenue - funnelData.budget) < 0 ? 'Убыток' : 'Прибыль'}
+            </CardBox>
+            <CardBox color={isNegative ? '#e74c3c' : undefined} style={{ gridColumn: 'span 2' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <BigValue>
+                  {results.revenue !== 0
+                    ? ((results.revenue - funnelData.budget) < 0
+                        ? '-' + Math.abs(results.revenue - funnelData.budget).toLocaleString('ru-RU') + ' ₸'
+                        : (results.revenue - funnelData.budget).toLocaleString('ru-RU') + ' ₸')
+                    : '—'}
+                </BigValue>
+                <div style={{ fontSize: 20, marginLeft: 6 }}>
+                  {(results.revenue - funnelData.budget) < 0 ? '🤯' : '💰'}
+                </div>
+                <div style={{ fontSize: 13, color: '#888', marginLeft: 4, fontWeight: 500 }}>
+                  {(results.revenue - funnelData.budget) < 0 ? 'Убыток' : 'Прибыль'}
+                </div>
               </div>
-            </div>
-          </CardBox>
-          <CardBox onClick={() => { setEditingPrice('traffic'); setEditingValue(funnelData.cpc ? funnelData.cpc.toString() : ''); }}>
-            <MetricIcon>👥</MetricIcon>
-            <MetricLabel>Цена за трафик</MetricLabel>
-            {editingPrice === 'traffic' ? (
-              <input
-                type="number"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={editingValue}
-                onChange={e => {
-                  const val = parseInt(e.target.value.replace(/\D/g, ''), 10);
-                  setEditingValue(e.target.value.replace(/\D/g, ''));
-                  if (val > 0) {
-                    setFunnelData(prev => ({ ...prev, cpc: val }));
-                  }
-                }}
-                onBlur={() => setEditingPrice(null)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                  if (e.key === 'Escape') setEditingPrice(null);
-                }}
-                style={{ fontSize: 20, width: 80, textAlign: 'center' }}
-                autoFocus
-              />
-            ) : (
-              <MetricValue>
-                {funnelData.cpc ? funnelData.cpc.toLocaleString('ru-RU') : '—'} ₸
-              </MetricValue>
-            )}
-          </CardBox>
-          <CardBox onClick={() => { setEditingPrice('lead'); setEditingValue(results.leads > 0 ? Math.round(funnelData.budget / results.leads).toString() : ''); }}>
-            <MetricIcon>📝</MetricIcon>
-            <MetricLabel>Цена за лид</MetricLabel>
-            {editingPrice === 'lead' ? (
-              <input
-                type="number"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={editingValue}
-                onChange={e => {
-                  const val = parseInt(e.target.value.replace(/\D/g, ''), 10);
-                  setEditingValue(e.target.value.replace(/\D/g, ''));
-                  if (val > 0 && results.leads > 0) {
-                    setFunnelData(prev => {
-                      const traffic = prev.budget / prev.cpc;
-                      const percent = traffic > 0 ? Math.max(0, Math.min(100, (prev.budget / val) / traffic * 100)) : 0;
-                      return { ...prev, trafficToLeads: percent };
-                    });
-                  }
-                }}
-                onBlur={() => setEditingPrice(null)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                  if (e.key === 'Escape') setEditingPrice(null);
-                }}
-                style={{ fontSize: 20, width: 80, textAlign: 'center' }}
-                autoFocus
-              />
-            ) : (
-              <MetricValue>
-                {results.leads > 0 ? Math.round(funnelData.budget / results.leads).toLocaleString('ru-RU') : '—'} ₸
-              </MetricValue>
-            )}
-          </CardBox>
-          <CardBox onClick={() => { setEditingPrice('qualifiedLead'); setEditingValue(results.qualifiedLeads > 0 ? Math.round(funnelData.budget / results.qualifiedLeads).toString() : ''); }}>
-            <MetricIcon>⭐</MetricIcon>
-            <MetricLabel>Цена за кач. лид</MetricLabel>
-            {editingPrice === 'qualifiedLead' ? (
-              <input
-                type="number"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={editingValue}
-                onChange={e => {
-                  const val = parseInt(e.target.value.replace(/\D/g, ''), 10);
-                  setEditingValue(e.target.value.replace(/\D/g, ''));
-                  if (val > 0 && results.qualifiedLeads > 0) {
-                    setFunnelData(prev => {
-                      const traffic = prev.budget / prev.cpc;
-                      const leads = traffic * (prev.trafficToLeads / 100);
-                      const percent = leads > 0 ? Math.max(0, Math.min(100, (prev.budget / val) / leads * 100)) : 0;
-                      return { ...prev, leadsToQualified: percent };
-                    });
-                  }
-                }}
-                onBlur={() => setEditingPrice(null)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                  if (e.key === 'Escape') setEditingPrice(null);
-                }}
-                style={{ fontSize: 20, width: 80, textAlign: 'center' }}
-                autoFocus
-              />
-            ) : (
-              <MetricValue>
-                {results.qualifiedLeads > 0 ? Math.round(funnelData.budget / results.qualifiedLeads).toLocaleString('ru-RU') : '—'} ₸
-              </MetricValue>
-            )}
-          </CardBox>
-          <CardBox onClick={() => { setEditingPrice('sale'); setEditingValue(results.sales > 0 ? Math.round(funnelData.budget / results.sales).toString() : ''); }}>
-            <MetricIcon>💰</MetricIcon>
-            <MetricLabel>Цена за продажу</MetricLabel>
-            {editingPrice === 'sale' ? (
-              <input
-                type="number"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={editingValue}
-                onChange={e => {
-                  const val = parseInt(e.target.value.replace(/\D/g, ''), 10);
-                  setEditingValue(e.target.value.replace(/\D/g, ''));
-                  if (val > 0 && results.sales > 0) {
-                    setFunnelData(prev => {
-                      const traffic = prev.budget / prev.cpc;
-                      const leads = traffic * (prev.trafficToLeads / 100);
-                      const qualified = leads * (prev.leadsToQualified / 100);
-                      const percent = qualified > 0 ? Math.max(0, Math.min(100, (prev.budget / val) / qualified * 100)) : 0;
-                      return { ...prev, qualifiedToSales: percent };
-                    });
-                  }
-                }}
-                onBlur={() => setEditingPrice(null)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                  if (e.key === 'Escape') setEditingPrice(null);
-                }}
-                style={{ fontSize: 20, width: 80, textAlign: 'center' }}
-                autoFocus
-              />
-            ) : (
-              <MetricValue>
-                {results.sales > 0 ? Math.round(funnelData.budget / results.sales).toLocaleString('ru-RU') : '—'} ₸
-              </MetricValue>
-            )}
-          </CardBox>
-        </CardGrid>
-        <StickyButtons visible={showSticky}>
-          <Button onClick={() => setIsConversionSelectorOpen(true)}>
-            Подставить конверсию
-          </Button>
-          <ResetButton onClick={resetDefaults} title="Сбросить поля">
-            <DeleteOutlineIcon fontSize="inherit" />
-          </ResetButton>
-        </StickyButtons>
-      </ResultsCard>
-      <FooterCreds>
-        big poppa: <a href="https://t.me/m2827120" target="_blank" rel="noopener noreferrer">m2827120</a>
-      </FooterCreds>
-      <ConversionSelector
-        open={isConversionSelectorOpen}
-        onClose={() => setIsConversionSelectorOpen(false)}
-        onSelect={handleConversionSelect}
-      />
-    </Container>
+            </CardBox>
+            <CardBox onClick={() => { setEditingPrice('traffic'); setEditingValue(funnelData.cpc ? funnelData.cpc.toString() : ''); }}>
+              <MetricIcon>👥</MetricIcon>
+              <MetricLabel>Цена за трафик</MetricLabel>
+              {editingPrice === 'traffic' ? (
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={editingValue}
+                  onChange={e => {
+                    const val = parseInt(e.target.value.replace(/\D/g, ''), 10);
+                    setEditingValue(e.target.value.replace(/\D/g, ''));
+                    if (val > 0) {
+                      setFunnelData(prev => ({ ...prev, cpc: val }));
+                    }
+                  }}
+                  onBlur={() => setEditingPrice(null)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                    if (e.key === 'Escape') setEditingPrice(null);
+                  }}
+                  style={{ fontSize: 20, width: 80, textAlign: 'center' }}
+                  autoFocus
+                />
+              ) : (
+                <MetricValue>
+                  {funnelData.cpc ? funnelData.cpc.toLocaleString('ru-RU') : '—'} ₸
+                </MetricValue>
+              )}
+            </CardBox>
+            <CardBox onClick={() => { setEditingPrice('lead'); setEditingValue(results.leads > 0 ? Math.round(funnelData.budget / results.leads).toString() : ''); }}>
+              <MetricIcon>📝</MetricIcon>
+              <MetricLabel>Цена за лид</MetricLabel>
+              {editingPrice === 'lead' ? (
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={editingValue}
+                  onChange={e => {
+                    const val = parseInt(e.target.value.replace(/\D/g, ''), 10);
+                    setEditingValue(e.target.value.replace(/\D/g, ''));
+                    if (val > 0 && results.leads > 0) {
+                      setFunnelData(prev => {
+                        const traffic = prev.budget / prev.cpc;
+                        const percent = traffic > 0 ? Math.max(0, Math.min(100, (prev.budget / val) / traffic * 100)) : 0;
+                        return { ...prev, trafficToLeads: percent };
+                      });
+                    }
+                  }}
+                  onBlur={() => setEditingPrice(null)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                    if (e.key === 'Escape') setEditingPrice(null);
+                  }}
+                  style={{ fontSize: 20, width: 80, textAlign: 'center' }}
+                  autoFocus
+                />
+              ) : (
+                <MetricValue>
+                  {results.leads > 0 ? Math.round(funnelData.budget / results.leads).toLocaleString('ru-RU') : '—'} ₸
+                </MetricValue>
+              )}
+            </CardBox>
+            <CardBox onClick={() => { setEditingPrice('qualifiedLead'); setEditingValue(results.qualifiedLeads > 0 ? Math.round(funnelData.budget / results.qualifiedLeads).toString() : ''); }}>
+              <MetricIcon>⭐</MetricIcon>
+              <MetricLabel>Цена за кач. лид</MetricLabel>
+              {editingPrice === 'qualifiedLead' ? (
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={editingValue}
+                  onChange={e => {
+                    const val = parseInt(e.target.value.replace(/\D/g, ''), 10);
+                    setEditingValue(e.target.value.replace(/\D/g, ''));
+                    if (val > 0 && results.qualifiedLeads > 0) {
+                      setFunnelData(prev => {
+                        const traffic = prev.budget / prev.cpc;
+                        const leads = traffic * (prev.trafficToLeads / 100);
+                        const percent = leads > 0 ? Math.max(0, Math.min(100, (prev.budget / val) / leads * 100)) : 0;
+                        return { ...prev, leadsToQualified: percent };
+                      });
+                    }
+                  }}
+                  onBlur={() => setEditingPrice(null)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                    if (e.key === 'Escape') setEditingPrice(null);
+                  }}
+                  style={{ fontSize: 20, width: 80, textAlign: 'center' }}
+                  autoFocus
+                />
+              ) : (
+                <MetricValue>
+                  {results.qualifiedLeads > 0 ? Math.round(funnelData.budget / results.qualifiedLeads).toLocaleString('ru-RU') : '—'} ₸
+                </MetricValue>
+              )}
+            </CardBox>
+            <CardBox onClick={() => { setEditingPrice('sale'); setEditingValue(results.sales > 0 ? Math.round(funnelData.budget / results.sales).toString() : ''); }}>
+              <MetricIcon>💰</MetricIcon>
+              <MetricLabel>Цена за продажу</MetricLabel>
+              {editingPrice === 'sale' ? (
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={editingValue}
+                  onChange={e => {
+                    const val = parseInt(e.target.value.replace(/\D/g, ''), 10);
+                    setEditingValue(e.target.value.replace(/\D/g, ''));
+                    if (val > 0 && results.sales > 0) {
+                      setFunnelData(prev => {
+                        const traffic = prev.budget / prev.cpc;
+                        const leads = traffic * (prev.trafficToLeads / 100);
+                        const qualified = leads * (prev.leadsToQualified / 100);
+                        const percent = qualified > 0 ? Math.max(0, Math.min(100, (prev.budget / val) / qualified * 100)) : 0;
+                        return { ...prev, qualifiedToSales: percent };
+                      });
+                    }
+                  }}
+                  onBlur={() => setEditingPrice(null)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                    if (e.key === 'Escape') setEditingPrice(null);
+                  }}
+                  style={{ fontSize: 20, width: 80, textAlign: 'center' }}
+                  autoFocus
+                />
+              ) : (
+                <MetricValue>
+                  {results.sales > 0 ? Math.round(funnelData.budget / results.sales).toLocaleString('ru-RU') : '—'} ₸
+                </MetricValue>
+              )}
+            </CardBox>
+          </CardGrid>
+          <StickyButtons visible={showSticky}>
+            <Button onClick={() => setIsConversionSelectorOpen(true)}>
+              Подставить конверсию
+            </Button>
+            <ResetButton onClick={resetDefaults} title="Сбросить поля">
+              <DeleteOutlineIcon fontSize="inherit" />
+            </ResetButton>
+          </StickyButtons>
+        </NegativeResultsCard>
+        <FooterCreds>
+          big poppa: <a href="https://t.me/m2827120" target="_blank" rel="noopener noreferrer">m2827120</a>
+        </FooterCreds>
+        <ConversionSelector
+          open={isConversionSelectorOpen}
+          onClose={() => setIsConversionSelectorOpen(false)}
+          onSelect={handleConversionSelect}
+        />
+      </Container>
+    </ThemeProvider>
   );
 }
 

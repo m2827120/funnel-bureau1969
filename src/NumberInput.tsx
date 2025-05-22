@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme, createGlobalStyle } from 'styled-components';
 
 interface NumberInputProps {
   value: number | '';
@@ -19,9 +20,26 @@ const parseNumber = (value: string) => {
   return digits ? Number(digits) : '';
 };
 
+const DarkInputPlaceholder = createGlobalStyle`
+  input::placeholder {
+    color: #b0b0b0 !important;
+    opacity: 1;
+  }
+`;
+
+const LightInputPlaceholder = createGlobalStyle`
+  input::placeholder {
+    color: #888 !important;
+    opacity: 1;
+  }
+`;
+
 const NumberInput: React.FC<NumberInputProps> = ({ value, onChange, placeholder, min, max, style }) => {
+  const theme = useTheme();
+  const isDark = theme.background && theme.background.toLowerCase() === '#181c20';
   return (
     <div style={{ position: 'relative', width: '100%' }}>
+      {isDark ? <DarkInputPlaceholder /> : <LightInputPlaceholder />}
       <input
         type="tel"
         inputMode="numeric"
@@ -41,7 +59,7 @@ const NumberInput: React.FC<NumberInputProps> = ({ value, onChange, placeholder,
           height: 48,
           lineHeight: '48px',
           padding: '12px 36px 12px 12px',
-          border: '1px solid #ddd',
+          border: isDark ? '1px solid #333' : '1px solid #ddd',
           borderRadius: 8,
           fontSize: 18,
           fontFamily: 'inherit',
@@ -49,6 +67,9 @@ const NumberInput: React.FC<NumberInputProps> = ({ value, onChange, placeholder,
           appearance: 'none',
           WebkitAppearance: 'none',
           MozAppearance: 'textfield',
+          background: isDark ? theme.cardBackground : '#fff',
+          color: isDark ? theme.text : '#222',
+          transition: 'all 0.2s',
           ...style,
         }}
         autoComplete="off"
@@ -61,7 +82,7 @@ const NumberInput: React.FC<NumberInputProps> = ({ value, onChange, placeholder,
           right: 12,
           top: '50%',
           transform: 'translateY(-50%)',
-          color: '#888',
+          color: isDark ? '#b0b0b0' : '#888',
           fontSize: 18,
           pointerEvents: 'none',
         }}

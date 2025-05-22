@@ -22,10 +22,11 @@ const Row = styled.div`
   min-height: 38px;
   gap: 0 8px;
 `;
-const LeftCol = styled.div`
+const LeftCol = styled.div<{ isNegative?: boolean }>`
   display: flex;
   align-items: center;
   min-width: 0;
+  color: ${({ isNegative, theme }) => isNegative ? '#222' : theme.text};
 `;
 const BarWrap = styled.div`
   width: 100%;
@@ -57,16 +58,16 @@ const ValueBlock = styled.div`
   text-align: right;
   justify-self: end;
 `;
-const BarValue = styled.span`
+const BarValue = styled.span<{ isNegative?: boolean }>`
   font-size: 18px;
   font-weight: 700;
-  color: #111;
+  color: ${({ isNegative, theme }) => isNegative ? '#222' : theme.text};
   line-height: 1.1;
 `;
-const BarPercent = styled.span`
+const BarPercent = styled.span<{ isNegative?: boolean }>`
   font-size: 13px;
   font-weight: 500;
-  color: #111;
+  color: ${({ isNegative, theme }) => isNegative ? '#222' : theme.text};
   margin-top: 1px;
 `;
 const Handle = styled.div<{ color: string; active?: boolean }>`
@@ -98,7 +99,7 @@ const Handle = styled.div<{ color: string; active?: boolean }>`
   }
 `;
 
-const FunnelVisualization: React.FC<FunnelVisualizationProps> = ({ stages, formatShortNumber, onStageSwipe }) => {
+const FunnelVisualization: React.FC<FunnelVisualizationProps> = ({ stages, formatShortNumber, onStageSwipe, isNegative }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(320);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -259,27 +260,27 @@ const FunnelVisualization: React.FC<FunnelVisualizationProps> = ({ stages, forma
           const trafficValue = stages[0]?.value || 0;
           const percentOfTraffic = trafficValue > 0 ? (stage.value / trafficValue * 100) : 0;
           percentBlock = (
-            <BarPercent
+            <BarPercent isNegative={isNegative}
               style={{ cursor: 'pointer' }}
               onClick={() => setShowTrafficPercent(showTrafficPercent === i ? null : i)}
             >
               {stepPercent}%
               {showTrafficPercent === i && (
-                <span style={{ marginLeft: 6, color: '#888', fontSize: 13 }}>
+                <span style={{ marginLeft: 6, color: isNegative ? '#222' : '#888', fontSize: 13 }}>
                   | {Math.round(percentOfTraffic)}% от трафика
                 </span>
               )}
             </BarPercent>
           );
         } else if (stage.percent !== undefined) {
-          percentBlock = <BarPercent>{stage.percent}%</BarPercent>;
+          percentBlock = <BarPercent isNegative={isNegative}>{stage.percent}%</BarPercent>;
         }
         return (
           <Row
             key={i}
             style={{ touchAction: 'none', width: '100%' }}
           >
-            <LeftCol>
+            <LeftCol isNegative={isNegative}>
               {stage.label}
             </LeftCol>
             <BarWrap>
@@ -299,7 +300,7 @@ const FunnelVisualization: React.FC<FunnelVisualizationProps> = ({ stages, forma
               />
             </BarWrap>
             <ValueBlock>
-              <BarValue>{formatShortNumber ? formatShortNumber(stage.value) : stage.value.toLocaleString('ru-RU')}</BarValue>
+              <BarValue isNegative={isNegative}>{formatShortNumber ? formatShortNumber(stage.value) : stage.value.toLocaleString('ru-RU')}</BarValue>
               {percentBlock}
             </ValueBlock>
           </Row>
