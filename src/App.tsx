@@ -629,6 +629,48 @@ function App() {
     });
   };
 
+  // Prevent swipe up gesture
+  useEffect(() => {
+    // Disable swipe up gesture
+    WebApp.disableClosingConfirmation();
+    
+    // Prevent default swipe up behavior
+    const preventSwipeUp = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      const startY = touch.clientY;
+      
+      const handleTouchMove = (moveEvent: TouchEvent) => {
+        const moveTouch = moveEvent.touches[0];
+        const deltaY = startY - moveTouch.clientY;
+        
+        // If swiping up more than 50px, prevent default
+        if (deltaY > 50) {
+          moveEvent.preventDefault();
+        }
+      };
+      
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      
+      const handleTouchEnd = () => {
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+      
+      document.addEventListener('touchend', handleTouchEnd);
+    };
+    
+    document.addEventListener('touchstart', preventSwipeUp, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchstart', preventSwipeUp);
+    };
+  }, []);
+
+  // Блокировка свайпа вверх в Telegram WebApp
+  useEffect(() => {
+    (WebApp as any)['setupSwipeBehavior']?.({ allow_vertical_swipe: false });
+  }, []);
+
   return (
     <ThemeProvider theme={isDarkTheme ? darkTheme : lightTheme}>
       <Container>
