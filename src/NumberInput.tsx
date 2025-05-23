@@ -59,7 +59,7 @@ const NumberInput: React.FC<NumberInputProps> = ({ value, onChange, placeholder,
           height: 48,
           lineHeight: '48px',
           padding: '12px 36px 12px 12px',
-          border: isDark ? '1px solid #333' : '1px solid #ddd',
+          border: style && style.borderColor ? `2px solid ${style.borderColor}` : (isDark ? '1px solid #333' : '1px solid #ddd'),
           borderRadius: 8,
           fontSize: 18,
           fontFamily: 'inherit',
@@ -67,14 +67,16 @@ const NumberInput: React.FC<NumberInputProps> = ({ value, onChange, placeholder,
           appearance: 'none',
           WebkitAppearance: 'none',
           MozAppearance: 'textfield',
-          background: isDark ? theme.cardBackground : '#fff',
+          background: style && style.background ? style.background : (isDark ? theme.darkInputBackground : '#fff'),
           color: isDark ? theme.text : '#222',
           transition: 'all 0.2s',
+          boxShadow: style && style.borderColor ? `0 0 0 2px ${style.borderColor}33` : undefined,
           ...style,
         }}
         autoComplete="off"
         min={min}
         max={max}
+        enterKeyHint="done"
       />
       <span
         style={{

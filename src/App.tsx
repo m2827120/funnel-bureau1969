@@ -8,7 +8,6 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Slider from '@mui/material/Slider';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import Tooltip from '@mui/material/Tooltip';
 import NumberInput from './NumberInput';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ConversionSelector from './components/ConversionSelector';
@@ -31,6 +30,21 @@ const Container = styled.div`
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   transition: all 0.3s ease;
+
+  @media (min-width: 768px) {
+    max-width: 720px;
+    padding: 24px 16px 96px 16px;
+  }
+
+  @media (min-width: 1024px) {
+    max-width: 960px;
+    padding: 32px 16px 96px 16px;
+  }
+
+  @media (min-width: 1280px) {
+    max-width: 1140px;
+    padding: 40px 16px 96px 16px;
+  }
 `;
 
 const ThemeToggle = styled.button`
@@ -58,6 +72,7 @@ const ThemeToggle = styled.button`
 
 const InputGroup = styled.div`
   margin-bottom: 16px;
+  min-height: 92px;
 `;
 
 const Label = styled.label`
@@ -177,19 +192,27 @@ const StickyButtons = styled.div<{
   visible: boolean;
 }>`
   position: fixed;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: 0;
-  width: 100vw;
   max-width: 420px;
-  transform: ${({ visible }) => (visible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(120%)')};
+  margin: 0 auto;
+  transform: ${({ visible }) => (visible ? 'translateY(0)' : 'translateY(120%)')};
   background: transparent;
-  box-shadow: 0 -2px 16px #0001;
-  padding: 0 12px 18px 12px;
+  box-shadow: none;
+  padding: 0 20px 18px 20px;
   display: flex;
   gap: 10px;
   z-index: 100;
   transition: transform 0.35s cubic-bezier(.4,0,.2,1);
   opacity: 1;
+  left: 0;
+  right: 0;
+  @media (max-width: 600px) {
+    padding-left: 12px;
+    padding-right: 12px;
+    max-width: 100vw;
+  }
 `;
 
 const CardGrid = styled.div`
@@ -257,14 +280,14 @@ const InfoIcon = styled(InfoOutlinedIcon)`
 `;
 
 const ErrorMessage = styled.div`
-  color: #e74c3c;
+  color: ${({ theme }) => theme.lightRed};
   font-size: 13px;
   margin-top: 2px;
 `;
 
 const NegativeResultsCard = styled(ResultsCard)<{ isNegative: boolean }>`
-  background: ${({ isNegative, theme }) => isNegative ? '#fff4f4' : theme.resultsCardBackground};
-  border-top: 4px solid ${({ isNegative, theme }) => isNegative ? '#e74c3c' : theme.secondary};
+  background: ${({ isNegative, theme }) => isNegative ? (theme.darkInputBackground || '#fff4f4') : theme.resultsCardBackground};
+  border-top: 4px solid ${({ isNegative, theme }) => isNegative ? (theme.darkRed || theme.lightRed) : theme.secondary};
 `;
 
 const AccordionTitle = styled.span`
@@ -304,9 +327,55 @@ interface FunnelResults {
 
 function App() {
   const [isDarkTheme, setIsDarkTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme === 'dark';
+    // Check Telegram theme first
+    const telegramTheme = WebApp.colorScheme;
+    if (telegramTheme) {
+      return telegramTheme === 'dark';
+    }
+    
+    // Fallback to system theme
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return prefersDark;
   });
+
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      // Only update if not manually set
+      const savedTheme = localStorage.getItem('theme');
+      if (!savedTheme) {
+        setIsDarkTheme(e.matches);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // Listen for Telegram theme changes
+  useEffect(() => {
+    const handleTelegramThemeChange = () => {
+      const telegramTheme = WebApp.colorScheme;
+      if (telegramTheme) {
+        // Only update if not manually set
+        const savedTheme = localStorage.getItem('theme');
+        if (!savedTheme) {
+          setIsDarkTheme(telegramTheme === 'dark');
+        }
+      }
+    };
+
+    // Initial check
+    handleTelegramThemeChange();
+
+    // Listen for theme changes
+    WebApp.onEvent('themeChanged', handleTelegramThemeChange);
+    return () => {
+      WebApp.offEvent('themeChanged', handleTelegramThemeChange);
+    };
+  }, []);
+
   const [funnelData, setFunnelData] = useState<FunnelData>({
     budget: 1000000,
     cpc: 520,
@@ -344,7 +413,7 @@ function App() {
     setFunnelData({
       budget: 1000000,
       cpc: 520,
-      averageCheck: 250000,
+      averageCheck: 0,
       trafficToLeads: 10,
       leadsToQualified: 50,
       qualifiedToSales: 20,
@@ -434,11 +503,10 @@ function App() {
       if (!ticking.current) {
         window.requestAnimationFrame(() => {
           const curr = window.scrollY;
-          if (curr < 10) {
-            setShowSticky(true);
-          } else if (curr > lastScroll.current) {
+          
+          if (curr > lastScroll.current) {
             setShowSticky(false); // вниз — скрыть
-          } else {
+          } else if (curr < lastScroll.current) {
             setShowSticky(true); // вверх — показать
           }
           lastScroll.current = curr;
@@ -527,7 +595,7 @@ function App() {
         </ThemeToggle>
         <MainCard>
           <SectionTitle>Ваши данные</SectionTitle>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
             <InputGroup style={{ flex: 1, minWidth: 180 }}>
               <Label>
                 Рекламный бюджет
@@ -573,7 +641,14 @@ function App() {
               </Label>
               <NumberInput
                 value={funnelData.averageCheck === 0 ? '' : funnelData.averageCheck}
-                onChange={v => handleInputChange('averageCheck', v === '' ? '0' : v)}
+                onChange={v => {
+                  if (v === '') {
+                    setErrors(prev => ({ ...prev, averageCheck: 'Введите положительное число' }));
+                    handleInputChange('averageCheck', '0');
+                  } else {
+                    handleInputChange('averageCheck', v);
+                  }
+                }}
                 placeholder="Введите сумму"
                 min={0}
                 style={errors.averageCheck ? { borderColor: '#e74c3c', background: '#fff6f6' } : {}}
@@ -681,7 +756,7 @@ function App() {
           </SectionTitle>
           <FunnelVisualization stages={funnelStages} isNegative={isNegative} formatShortNumber={formatShortNumber} onStageSwipe={handleStageSwipe} />
           <CardGrid style={{ margin: 0 }}>
-            <CardBox color={isNegative ? '#e74c3c' : undefined} style={{ gridColumn: 'span 2' }}>
+            <CardBox color={isNegative ? (isDarkTheme ? darkTheme.darkRed : lightTheme.lightRed) : undefined} style={{ gridColumn: 'span 2' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <BigValue>
                   {results.revenue !== 0
@@ -695,11 +770,11 @@ function App() {
                   {results.revenue < 0 ? 'Убыток' : 'Выручка'}
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: isNegative ? '#e74c3c' : '#1bb36a', marginTop: 2, fontWeight: 500 }}>
+              <div style={{ fontSize: 12, color: isNegative ? (isDarkTheme ? darkTheme.darkRed : lightTheme.lightRed) : '#1bb36a', marginTop: 2, fontWeight: 500 }}>
                 ROI: {results.revenue !== 0 ? results.roi + '%' : '—'}
               </div>
             </CardBox>
-            <CardBox color={isNegative ? '#e74c3c' : undefined} style={{ gridColumn: 'span 2' }}>
+            <CardBox color={isNegative ? (isDarkTheme ? darkTheme.darkRed : lightTheme.lightRed) : undefined} style={{ gridColumn: 'span 2' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <BigValue>
                   {results.revenue !== 0
@@ -718,7 +793,7 @@ function App() {
             </CardBox>
             <CardBox onClick={() => { setEditingPrice('traffic'); setEditingValue(funnelData.cpc ? funnelData.cpc.toString() : ''); }}>
               <MetricIcon>👥</MetricIcon>
-              <MetricLabel>Цена за трафик</MetricLabel>
+              <MetricLabel>Цена за трафик, CPC</MetricLabel>
               {editingPrice === 'traffic' ? (
                 <input
                   type="number"
@@ -739,6 +814,7 @@ function App() {
                   }}
                   style={{ fontSize: 20, width: 80, textAlign: 'center' }}
                   autoFocus
+                  enterKeyHint="done"
                 />
               ) : (
                 <MetricValue>
@@ -748,7 +824,7 @@ function App() {
             </CardBox>
             <CardBox onClick={() => { setEditingPrice('lead'); setEditingValue(results.leads > 0 ? Math.round(funnelData.budget / results.leads).toString() : ''); }}>
               <MetricIcon>📝</MetricIcon>
-              <MetricLabel>Цена за лид</MetricLabel>
+              <MetricLabel>Цена за лид, CPL</MetricLabel>
               {editingPrice === 'lead' ? (
                 <input
                   type="number"
@@ -773,6 +849,7 @@ function App() {
                   }}
                   style={{ fontSize: 20, width: 80, textAlign: 'center' }}
                   autoFocus
+                  enterKeyHint="done"
                 />
               ) : (
                 <MetricValue>
@@ -782,7 +859,7 @@ function App() {
             </CardBox>
             <CardBox onClick={() => { setEditingPrice('qualifiedLead'); setEditingValue(results.qualifiedLeads > 0 ? Math.round(funnelData.budget / results.qualifiedLeads).toString() : ''); }}>
               <MetricIcon>⭐</MetricIcon>
-              <MetricLabel>Цена за кач. лид</MetricLabel>
+              <MetricLabel>Цена за кач. лид, CPQL</MetricLabel>
               {editingPrice === 'qualifiedLead' ? (
                 <input
                   type="number"
@@ -808,6 +885,7 @@ function App() {
                   }}
                   style={{ fontSize: 20, width: 80, textAlign: 'center' }}
                   autoFocus
+                  enterKeyHint="done"
                 />
               ) : (
                 <MetricValue>
@@ -817,7 +895,7 @@ function App() {
             </CardBox>
             <CardBox onClick={() => { setEditingPrice('sale'); setEditingValue(results.sales > 0 ? Math.round(funnelData.budget / results.sales).toString() : ''); }}>
               <MetricIcon>💰</MetricIcon>
-              <MetricLabel>Цена за продажу</MetricLabel>
+              <MetricLabel>Цена за продажу, CPS</MetricLabel>
               {editingPrice === 'sale' ? (
                 <input
                   type="number"
@@ -844,6 +922,7 @@ function App() {
                   }}
                   style={{ fontSize: 20, width: 80, textAlign: 'center' }}
                   autoFocus
+                  enterKeyHint="done"
                 />
               ) : (
                 <MetricValue>
@@ -862,7 +941,7 @@ function App() {
           </StickyButtons>
         </NegativeResultsCard>
         <FooterCreds>
-          big poppa: <a href="https://t.me/m2827120" target="_blank" rel="noopener noreferrer">m2827120</a>
+          😎 big poppa: <a href="https://t.me/m2827120" target="_blank" rel="noopener noreferrer">@m2827120</a>
         </FooterCreds>
         <ConversionSelector
           open={isConversionSelectorOpen}

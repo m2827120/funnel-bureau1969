@@ -1,59 +1,69 @@
-# Конструктор воронки продаж
+# Funnel Calculator
 
-Telegram Mini App для расчета воронки продаж и ROI на основе рекламного бюджета и среднего чека.
+A modern web application for calculating and visualizing sales funnel metrics. Built with React, TypeScript, and Material-UI.
 
-## Функциональность
+## Features
 
-- Расчет ключевых метрик воронки продаж
-- Настраиваемые конверсии на каждом этапе
-- Автоматический расчет ROI
-- Удобный интерфейс в стиле Telegram
+- Interactive sales funnel visualization
+- Real-time ROI and profit calculations
+- Dark/Light theme support
+- Mobile-responsive design
+- Telegram WebApp integration
+- Conversion rate presets for different industries
 
-## Установка
+## Tech Stack
 
-1. Клонируйте репозиторий:
+- React
+- TypeScript
+- Material-UI
+- Styled Components
+- Telegram WebApp SDK
+
+## Getting Started
+
+1. Clone the repository:
 ```bash
-git clone [url-репозитория]
+git clone https://github.com/yourusername/funnel-calc.git
 cd funnel-calc
 ```
 
-2. Установите зависимости:
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Запустите приложение в режиме разработки:
+3. Start the development server:
 ```bash
 npm start
 ```
 
-## Сборка для продакшена
-
+4. Build for production:
 ```bash
 npm run build
 ```
 
-## Технологии
+## Usage
 
-- React
-- TypeScript
-- Styled Components
-- Telegram Web App SDK
+1. Enter your advertising budget
+2. Set your average check amount
+3. Adjust conversion rates using sliders
+4. View real-time calculations of:
+   - Traffic
+   - Leads
+   - Qualified Leads
+   - Sales
+   - Revenue
+   - ROI
+   - Profit/Loss
 
-## Структура проекта
+## Contributing
 
-```
-funnel-calc/
-├── public/
-│   └── index.html
-├── src/
-│   ├── App.tsx
-│   └── index.tsx
-├── package.json
-├── tsconfig.json
-└── README.md
-```
+Feel free to submit issues and pull requests.
 
-## Лицензия
+## License
 
-MIT 
+MIT License - feel free to use this project for any purpose.
+
+## Author
+
+- Telegram: [@m2827120](https://t.me/m2827120) 

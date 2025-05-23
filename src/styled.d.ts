@@ -17,5 +17,8 @@ declare module 'styled-components' {
     metricValueColor: string;
     sliderExplainColor: string;
     footerColor: string;
+    darkRed?: string;
+    lightRed?: string;
+    darkInputBackground?: string;
   }
 } 

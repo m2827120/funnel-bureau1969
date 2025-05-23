@@ -14,6 +14,8 @@ export const lightTheme = {
   metricValueColor: '#2481cc',
   sliderExplainColor: '#888888',
   footerColor: '#888888',
+  lightRed: '#e74c3c',
+  darkInputBackground: '#fff',
 };
 
 export const darkTheme = {
@@ -32,4 +34,7 @@ export const darkTheme = {
   metricValueColor: '#4a9eff',
   sliderExplainColor: '#b0b0b0',
   footerColor: '#b0b0b0',
+  darkRed: '#a83232',
+  lightRed: '#e74c3c',
+  darkInputBackground: '#23272e',
 }; 
