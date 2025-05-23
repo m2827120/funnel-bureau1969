@@ -668,7 +668,12 @@ function App() {
 
   // Блокировка свайпа вверх в Telegram WebApp
   useEffect(() => {
-    (WebApp as any)['setupSwipeBehavior']?.({ allow_vertical_swipe: false });
+    WebApp.ready();
+    setTimeout(() => {
+      if (typeof (WebApp as any).setupSwipeBehavior === 'function') {
+        (WebApp as any).setupSwipeBehavior({ allow_vertical_swipe: false });
+      }
+    }, 100);
   }, []);
 
   return (

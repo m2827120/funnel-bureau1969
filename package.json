@@ -7,7 +7,7 @@
     "@emotion/styled": "^11.11.5",
     "@mui/icons-material": "^5.15.15",
     "@mui/material": "^5.15.15",
-    "@twa-dev/sdk": "^6.9.1",
+    "@twa-dev/sdk": "^8.0.2",
     "@types/node": "^20.11.24",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
