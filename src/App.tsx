@@ -15,6 +15,7 @@ import { ConversionData } from './data/conversionData';
 import { lightTheme, darkTheme } from './theme';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import ReactGA from 'react-ga4';
 
 // Initialize Telegram WebApp
 WebApp.ready();
@@ -409,6 +410,11 @@ function App() {
 
   const [isConversionSelectorOpen, setIsConversionSelectorOpen] = useState(false);
 
+  // Initialize GA4
+  useEffect(() => {
+    ReactGA.initialize('G-WRM6JQZ3T3'); // Замените на ваш ID измерения GA4
+  }, []);
+
   const resetDefaults = useCallback(() => {
     setFunnelData({
       budget: 1000000,
@@ -419,6 +425,12 @@ function App() {
       qualifiedToSales: 20,
     });
     setErrors({});
+
+    // Track reset
+    ReactGA.event({
+      category: 'Funnel',
+      action: 'Reset'
+    });
   }, []);
 
   const calculateFunnel = () => {
@@ -448,6 +460,16 @@ function App() {
       revenue: Math.round(revenue),
       roi: Math.round(roi * 100) / 100,
     });
+
+    // Track results when they change
+    if (results.traffic > 0) {
+      ReactGA.event({
+        category: 'Funnel',
+        action: 'Calculate Results',
+        label: 'Success',
+        value: results.roi
+      });
+    }
   };
 
   const handleInputChange = (field: keyof FunnelData, value: string | number) => {
@@ -458,6 +480,14 @@ function App() {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
     setFunnelData(prev => ({ ...prev, [field]: numValue }));
+    
+    // Track input changes
+    ReactGA.event({
+      category: 'Funnel',
+      action: 'Input Change',
+      label: field,
+      value: numValue
+    });
   };
 
   const handleStageSwipe = useCallback((stageIndex: number, steps: number) => {
@@ -579,12 +609,24 @@ function App() {
       leadsToQualified: data.leadToQualified,
       qualifiedToSales: data.qualifiedToSale,
     }));
+
+    // Track conversion selection
+    ReactGA.event({
+      category: 'Funnel',
+      action: 'Select Conversion',
+      label: 'Custom Conversion'
+    });
   };
 
   const toggleTheme = () => {
     const newTheme = !isDarkTheme;
     setIsDarkTheme(newTheme);
     localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+    ReactGA.event({
+      category: 'Theme',
+      action: 'Toggle',
+      label: newTheme ? 'Dark' : 'Light'
+    });
   };
 
   return (

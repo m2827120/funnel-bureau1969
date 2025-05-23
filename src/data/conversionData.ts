@@ -58,6 +58,7 @@ export const conversionData: ConversionData[] = [
     niche: 'Авто (автомобили, дилеры)',
     platform: 'TikTok Ads',
     cpc: 150,
+    
     trafficToLead: 1,
     leadToQualified: 70,
     qualifiedToSale: 15,
