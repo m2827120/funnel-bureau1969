@@ -19,6 +19,7 @@ import ReactGA from 'react-ga4';
 
 // Initialize Telegram WebApp
 WebApp.ready();
+WebApp.expand();
 
 // Новый хук для вычисления padding-top
 function useTelegramHeaderPadding() {
@@ -301,6 +302,7 @@ const NegativeResultsCard = styled(ResultsCard)<{ isNegative: boolean }>`
   max-width: 340px;
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 32px;
   @media (min-width: 700px) {
     max-width: 540px;
     padding: 32px 32px 24px 32px;
@@ -638,8 +640,8 @@ function App() {
         const moveTouch = moveEvent.touches[0];
         const deltaY = startY - moveTouch.clientY;
         
-        // If swiping up more than 50px, prevent default
-        if (deltaY > 50) {
+        // If swiping up more than 20px, prevent default
+        if (deltaY > 20) {
           moveEvent.preventDefault();
         }
       };
@@ -663,14 +665,53 @@ function App() {
 
   useEffect(() => {
     WebApp.ready();
-    const setupSwipe = () => {
+    
+    // Configure Telegram WebApp behavior
+    const setupTelegramBehavior = () => {
+      // Disable swipe to close
+      WebApp.disableClosingConfirmation();
+      
+      // Disable pull-to-refresh
+      if (typeof (WebApp as any).disablePullToRefresh === 'function') {
+        (WebApp as any).disablePullToRefresh();
+      }
+      
+      // Disable swipe gestures
       if (typeof (WebApp as any).setupSwipeBehavior === 'function') {
-        (WebApp as any).setupSwipeBehavior({ allow_vertical_swipe: false });
+        (WebApp as any).setupSwipeBehavior({ 
+          allow_vertical_swipe: false,
+          allow_horizontal_swipe: true
+        });
       }
     };
-    setTimeout(setupSwipe, 100);
-    window.addEventListener('resize', setupSwipe);
-    return () => window.removeEventListener('resize', setupSwipe);
+    
+    setupTelegramBehavior();
+    window.addEventListener('resize', setupTelegramBehavior);
+    
+    return () => {
+      window.removeEventListener('resize', setupTelegramBehavior);
+    };
+  }, []);
+
+  // Add additional iOS gesture prevention
+  useEffect(() => {
+    const preventDefault = (e: Event) => {
+      if (e instanceof TouchEvent && e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchmove', preventDefault, { passive: false });
+    document.addEventListener('gesturestart', preventDefault, { passive: false });
+    document.addEventListener('gesturechange', preventDefault, { passive: false });
+    document.addEventListener('gestureend', preventDefault, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchmove', preventDefault);
+      document.removeEventListener('gesturestart', preventDefault);
+      document.removeEventListener('gesturechange', preventDefault);
+      document.removeEventListener('gestureend', preventDefault);
+    };
   }, []);
 
   const dynamicPaddingBottom = isScrollable ? 180 : 48;
