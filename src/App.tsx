@@ -26,7 +26,8 @@ const Container = styled.div`
   margin: 0 auto;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   box-sizing: border-box;
-  min-height: 100vh;
+  min-height: var(--tg-viewport-stable-height, 100vh);
+  height: var(--tg-viewport-stable-height, 100vh);
   padding-bottom: 96px; /* для кнопки */
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
@@ -45,29 +46,6 @@ const Container = styled.div`
   @media (min-width: 1280px) {
     max-width: 1140px;
     padding: 40px 16px 96px 16px;
-  }
-`;
-
-const ThemeToggle = styled.button`
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  background: ${({ theme }) => theme.cardBackground};
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: ${({ theme }) => theme.text};
-  box-shadow: 0 2px 8px ${({ theme }) => theme.shadowColor};
-  z-index: 1000;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: scale(1.1);
   }
 `;
 
@@ -679,9 +657,6 @@ function App() {
   return (
     <ThemeProvider theme={isDarkTheme ? darkTheme : lightTheme}>
       <Container>
-        <ThemeToggle onClick={toggleTheme}>
-          {isDarkTheme ? <Brightness7Icon /> : <Brightness4Icon />}
-        </ThemeToggle>
         <MainCard>
           <SectionTitle>Ваши данные</SectionTitle>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
