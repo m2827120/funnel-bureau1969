@@ -20,7 +20,23 @@ import ReactGA from 'react-ga4';
 // Initialize Telegram WebApp
 WebApp.ready();
 
-const Container = styled.div`
+// Новый хук для вычисления padding-top
+function useTelegramHeaderPadding() {
+  const [headerPadding, setHeaderPadding] = useState(0);
+  useEffect(() => {
+    function updatePadding() {
+      const wa = ((window as any).Telegram?.WebApp || WebApp) as any;
+      const headerHeight = wa?.headerHeight || 56; // 56px — дефолт для Telegram
+      setHeaderPadding(headerHeight);
+    }
+    updatePadding();
+    window.addEventListener('resize', updatePadding);
+    return () => window.removeEventListener('resize', updatePadding);
+  }, []);
+  return headerPadding;
+}
+
+const Container = styled.div<{ headerPadding: number }>`
   padding: 16px;
   max-width: 100%;
   margin: 0 auto;
@@ -32,6 +48,7 @@ const Container = styled.div`
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   transition: all 0.3s ease;
+  padding-top: ${({ headerPadding }) => headerPadding}px;
 
   @media (min-width: 768px) {
     max-width: 720px;
@@ -644,19 +661,23 @@ function App() {
     };
   }, []);
 
-  // Блокировка свайпа вверх в Telegram WebApp
+  const headerPadding = useTelegramHeaderPadding();
+
   useEffect(() => {
     WebApp.ready();
-    setTimeout(() => {
+    const setupSwipe = () => {
       if (typeof (WebApp as any).setupSwipeBehavior === 'function') {
         (WebApp as any).setupSwipeBehavior({ allow_vertical_swipe: false });
       }
-    }, 100);
+    };
+    setTimeout(setupSwipe, 100);
+    window.addEventListener('resize', setupSwipe);
+    return () => window.removeEventListener('resize', setupSwipe);
   }, []);
 
   return (
     <ThemeProvider theme={isDarkTheme ? darkTheme : lightTheme}>
-      <Container>
+      <Container headerPadding={headerPadding}>
         <MainCard>
           <SectionTitle>Ваши данные</SectionTitle>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
