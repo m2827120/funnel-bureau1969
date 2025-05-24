@@ -74,15 +74,29 @@ const handleBounceAnimation = keyframes`
   50% { transform: translateY(-50%) scale(1.1); }
   100% { transform: translateY(-50%) scale(1); }
 `;
-const BarContainer = styled.div<{ showInitialAnimation?: boolean }>`
+const slideFadeIn = keyframes`
+  from { opacity: 0; transform: translateY(30px) scaleX(0.8);}
+  to { opacity: 1; transform: translateY(0) scaleX(1);}
+`;
+const handleFadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+const handleBreathe = keyframes`
+  0% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.08); }
+  100% { transform: translateY(-50%) scale(1); }
+`;
+const BarContainer = styled.div<{ showInitialAnimation?: boolean; delay?: number }>`
   position: relative;
   width: 100%;
   height: 100%;
   transform-origin: left center;
   will-change: transform, opacity;
-  
-  ${({ showInitialAnimation }) => showInitialAnimation && css`
-    animation: ${growAnimation} 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  ${({ showInitialAnimation, delay }) => showInitialAnimation && css`
+    animation: ${slideFadeIn} 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation-delay: ${delay || 0}ms;
+    animation-fill-mode: both;
   `}
 `;
 const Bar = styled.div<{ color: string; width: number }>`
@@ -152,11 +166,14 @@ const Handle = styled.div<{ color: string; active?: boolean; isDragging?: boolea
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   margin-left: -14px;
   will-change: transform, border-color, box-shadow;
-  
+  opacity: 1;
   ${({ showInitialAnimation }) => showInitialAnimation && css`
-    animation: ${handleBounceAnimation} 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: ${handleFadeIn} 0.7s ease;
+    animation-fill-mode: both;
   `}
-  
+  ${({ showInitialAnimation }) => !showInitialAnimation && css`
+    animation: ${handleBreathe} 2.2s ease-in-out infinite;
+  `}
   ${({ isDragging }) => isDragging && css`
     animation: ${pulseAnimation} 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   `}
@@ -437,7 +454,7 @@ const FunnelVisualization: React.FC<FunnelVisualizationProps> = ({ stages, forma
               {stage.label}
             </LeftCol>
             <BarWrap ref={el => barWrapRefs.current[i] = el}>
-              <BarContainer showInitialAnimation={showInitialAnimation}>
+              <BarContainer showInitialAnimation={showInitialAnimation} delay={i * 120}>
                 <Bar 
                   color={stage.color} 
                   width={barWidth}
