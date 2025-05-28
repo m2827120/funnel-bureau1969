@@ -16,9 +16,13 @@ import { lightTheme, darkTheme } from './theme';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import ReactGA from 'react-ga4';
+import { saveUserData } from './services/airtable';
 
 // Initialize Telegram WebApp
 WebApp.ready();
+
+// Initialize Google Analytics
+ReactGA.initialize('G-WRM6JQZ3T3');
 
 // Новый хук для вычисления padding-top
 function useTelegramHeaderPadding() {
@@ -674,6 +678,28 @@ function App() {
   }, []);
 
   const dynamicPaddingBottom = isScrollable ? 180 : 48;
+
+  // Add effect to capture and save user data on first load
+  useEffect(() => {
+    const saveInitialUserData = async () => {
+      try {
+        const initData = WebApp.initData;
+        if (initData) {
+          const user = WebApp.initDataUnsafe.user;
+          if (user?.username) {
+            await saveUserData({
+              username: user.username,
+              firstLaunchDate: new Date().toISOString(),
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error saving initial user data:', error);
+      }
+    };
+
+    saveInitialUserData();
+  }, []);
 
   return (
     isDarkTheme === null

@@ -23,8 +23,8 @@ A modern web application for calculating and visualizing sales funnel metrics. B
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/funnel-calc.git
-cd funnel-calc
+git clone https://github.com/m2827120/funnel-bureau1969.git
+cd funnel-bureau1969
 ```
 
 2. Install dependencies:
