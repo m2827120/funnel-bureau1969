@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/funnel-bureau1969/static/js/main.188f43ee.js",
+    "main.js": "/funnel-bureau1969/static/js/main.d45d589e.js",
     "index.html": "/funnel-bureau1969/index.html",
-    "main.188f43ee.js.map": "/funnel-bureau1969/static/js/main.188f43ee.js.map"
+    "main.d45d589e.js.map": "/funnel-bureau1969/static/js/main.d45d589e.js.map"
   },
   "entrypoints": [
-    "static/js/main.188f43ee.js"
+    "static/js/main.d45d589e.js"
   ]
 }
