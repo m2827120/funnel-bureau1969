@@ -1,12 +1,12 @@
 {
   "files": {
-    "main.js": "/funnel-bureau1969/static/js/main.bfb26fb3.js",
+    "main.js": "/funnel-bureau1969/static/js/main.e3bfd87e.js",
     "static/js/952.54ea2cbc.chunk.js": "/funnel-bureau1969/static/js/952.54ea2cbc.chunk.js",
     "index.html": "/funnel-bureau1969/index.html",
-    "main.bfb26fb3.js.map": "/funnel-bureau1969/static/js/main.bfb26fb3.js.map",
+    "main.e3bfd87e.js.map": "/funnel-bureau1969/static/js/main.e3bfd87e.js.map",
     "952.54ea2cbc.chunk.js.map": "/funnel-bureau1969/static/js/952.54ea2cbc.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.bfb26fb3.js"
+    "static/js/main.e3bfd87e.js"
   ]
 }
