@@ -16,7 +16,7 @@ import { lightTheme, darkTheme } from './theme';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import ReactGA from 'react-ga4';
-import { saveUserData } from './services/airtable';
+import { userService } from './services/userService';
 
 // Initialize Telegram WebApp
 WebApp.ready();
@@ -409,6 +409,29 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const saveUserData = async () => {
+      try {
+        const initData = WebApp.initData;
+        if (initData) {
+          const user = WebApp.initDataUnsafe.user;
+          if (user?.username) {
+            // Check if user already exists
+            const existingUser = await userService.getUserByTelegramUsername(user.username);
+            if (!existingUser) {
+              // Save new user if they don't exist
+              await userService.saveNewUser(user.username);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error saving user data:', error);
+      }
+    };
+
+    saveUserData();
+  }, []);
+
   const resetDefaults = useCallback(() => {
     setFunnelData({
       budget: 1000000,
@@ -678,28 +701,6 @@ function App() {
   }, []);
 
   const dynamicPaddingBottom = isScrollable ? 180 : 48;
-
-  // Add effect to capture and save user data on first load
-  useEffect(() => {
-    const saveInitialUserData = async () => {
-      try {
-        const initData = WebApp.initData;
-        if (initData) {
-          const user = WebApp.initDataUnsafe.user;
-          if (user?.username) {
-            await saveUserData({
-              username: user.username,
-              firstLaunchDate: new Date().toISOString(),
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error saving initial user data:', error);
-      }
-    };
-
-    saveInitialUserData();
-  }, []);
 
   return (
     isDarkTheme === null
